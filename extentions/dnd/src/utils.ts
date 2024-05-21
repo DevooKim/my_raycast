@@ -1,5 +1,5 @@
 import { exec, execSync } from "child_process";
-import { open, showHUD, closeMainWindow, Cache, showToast, Toast } from "@raycast/api";
+import { open, showHUD, Cache, showToast, Toast } from "@raycast/api";
 
 const DNDshortcutName = `DND`;
 
@@ -17,12 +17,10 @@ async function executeDNDCommand(command: string) {
   return isOn;
 }
 
-async function handleDNDCommandError(error: any) {
-  if ("code" in error) {
-    if (error.code === 1) {
-      await showHUD("단축어를 설치해주세요.");
-      await installShortcuts();
-    }
+async function handleDNDCommandError(error: unknown) {
+  if (error instanceof Error && error.message.includes("WFBackgroundShortcutRunnerErrorDomain")) {
+    await showHUD("단축어를 설치해주세요.");
+    await installShortcuts();
   }
 }
 
