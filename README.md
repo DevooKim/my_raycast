@@ -1,2 +1,8 @@
 # my_raycast
-raycast 익스텐션 가내수공업
+직접 만들어 쓰는 [raycast](https://www.raycast.com/) 익스텐션
+
+
+# 항목
+| 이름 | 설명 |
+| --- | --- |
+| DND | 방해금지모드 |
