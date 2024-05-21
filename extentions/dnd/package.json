@@ -1,0 +1,89 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "dnd",
+  "title": "DND",
+  "description": "방해금지모드를 켜고 끄는 Raycast 확장 프로그램",
+  "icon": "command-icon.png",
+  "author": "devookim",
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "on",
+      "title": "DND On",
+      "subtitle": "방해금지모드 켜기",
+      "description": "방해금지모드 켜기",
+      "mode": "no-view"
+    },
+    {
+      "name": "off",
+      "title": "DND Off",
+      "subtitle": "방해금지모드 끄기",
+      "description": "방해금지모드 끄기",
+      "mode": "no-view"
+    },
+    {
+      "name": "status",
+      "title": "DND Status",
+      "subtitle": "방해금지모드 상태 확인",
+      "description": "방해금지모드 상태 확인",
+      "mode": "no-view"
+    },
+    {
+      "name": "toggle",
+      "title": "DND Toggle",
+      "subtitle": "방해금지모드 토글",
+      "description": "방해금지모드 토글",
+      "mode": "no-view"
+    },
+    {
+      "name": "timer_1h",
+      "title": "DND For 1 Hour",
+      "subtitle": "방해금지모드 1시간",
+      "description": "방해금지모드 1시간",
+      "mode": "no-view"
+    },
+    {
+      "name": "timer",
+      "title": "DND Timer",
+      "subtitle": "방해금지모드 설정",
+      "description": "방해금지모드 설정",
+      "mode": "no-view",
+      "preferences": [
+        {
+          "title": "minutes",
+          "name": "minutes",
+          "type": "textfield",
+          "description": "minutes",
+          "placeholder": "60",
+          "required": false
+        }
+      ],
+      "arguments": [
+        {
+          "name": "minutes",
+          "type": "text",
+          "description": "minutes",
+          "placeholder": "60"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.74.1"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.6",
+    "@types/node": "20.8.10",
+    "@types/react": "18.2.27",
+    "eslint": "^8.51.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  },
+  "scripts": {
+    "build": "ray build -e dist",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}
