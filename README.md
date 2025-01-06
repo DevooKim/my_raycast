@@ -6,3 +6,4 @@
 | 이름 | 설명 |
 | --- | --- |
 | DND | 방해금지모드 |
+| Nginx | reload nginx |
