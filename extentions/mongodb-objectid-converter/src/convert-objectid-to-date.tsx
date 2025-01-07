@@ -8,7 +8,7 @@ import { ObjectId } from "mongodb";
 import copyToClipboard from "./utils/copyToClipboard";
 
 export default function Command() {
-  const [objectId, setObjectId] = useState<string>("");
+  const [objectId, setObjectId] = useState<string>(ObjectId.createFromTime(new Date().getTime() / 1000).toHexString());
 
   const timestamp = useMemo(() => {
     try {
