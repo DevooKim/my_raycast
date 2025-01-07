@@ -3,7 +3,7 @@
   "name": "mongodb-objectid-converter",
   "title": "Mongodb ObjectId Converter",
   "description": "Transform between mongodb objectId and date",
-  "icon": "extension-icon.png",
+  "icon": "mongodb_clock.png",
   "author": "devookim",
   "license": "MIT",
   "commands": [
@@ -16,7 +16,7 @@
     },
     {
       "name": "convert-date-to-objectid",
-      "title": "Convert  Date to ObjectId",
+      "title": "Convert Date to ObjectId",
       "subtitle": "Convert ObjectId to Timestamp",
       "description": "",
       "mode": "view"
