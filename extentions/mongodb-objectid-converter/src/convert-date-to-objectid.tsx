@@ -1,4 +1,4 @@
-import { Form, ActionPanel, Action, Icon } from "@raycast/api";
+import { ActionPanel, Action, Icon, Form } from "@raycast/api";
 import { useState } from "react";
 import { ObjectId } from "mongodb";
 import copyToClipboard from "./utils/copyToClipboard";

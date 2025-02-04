@@ -3,7 +3,7 @@
   "name": "dnd",
   "title": "DND",
   "description": "방해금지모드를 켜고 끄는 Raycast 확장 프로그램",
-  "icon": "command-icon.png",
+  "icon": "main-icon.png",
   "author": "devookim",
   "license": "MIT",
   "commands": [
