@@ -16,7 +16,8 @@ function MenuList() {
   const { isLoading, data } = usePromise<(url: string) => Promise<WeeklyMenu>>(
     async (url: string) => {
       if (isValidCache(CACHE_KEY)) {
-        const cachedData = getCachedData(CACHE_KEY);ƒ
+        const cachedData = getCachedData(CACHE_KEY);
+        ƒ;
         if (cachedData) {
           return cachedData;
         }
