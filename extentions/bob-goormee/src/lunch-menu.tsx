@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import axios from "axios";
 import { Action, ActionPanel, Color, Detail, Grid, useNavigation } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
@@ -11,13 +11,13 @@ import { CACHE_KEY, Menu, WeeklyMenu, dayOfWeekDescriptions } from "../types";
 
 function MenuList() {
   const { push } = useNavigation();
+  const [searchText, setSearchText] = useState("");
 
   const abortable = useRef<AbortController>();
   const { isLoading, data } = usePromise<(url: string) => Promise<WeeklyMenu>>(
     async (url: string) => {
       if (isValidCache(CACHE_KEY)) {
         const cachedData = getCachedData(CACHE_KEY);
-        ƒ;
         if (cachedData) {
           return cachedData;
         }
@@ -44,33 +44,49 @@ function MenuList() {
 
   const weekdays = getWeekDays();
 
+  const searchedData = searchText
+    ? weekdays.filter(
+        (day) =>
+          `${dayOfWeekDescriptions[day]}요일`.includes(searchText) ||
+          data?.data[day]["2"].some((menu) => menu.name.includes(searchText)),
+      )
+    : weekdays;
+
   return (
-    <Grid isLoading={isLoading} columns={3}>
+    <Grid isLoading={isLoading} columns={3} onSearchTextChange={setSearchText}>
       {data &&
-        weekdays.map((day, dayMapIdx) => (
-          <Grid.Section
-            key={day}
-            title={dayMapIdx === 0 ? `${dayOfWeekDescriptions[day]}요일 (오늘)` : `${dayOfWeekDescriptions[day]}요일`}
-            subtitle={`${data.data[day]["2"].length}개의 메뉴`}
-          >
-            {data.data[day]["2"].map((menu, mealMapIdx) => (
-              <Grid.Item
-                key={`${day}-lunch-${mealMapIdx}`}
-                content={menu.thumbnailUrl || ""}
-                title={menu.name}
-                subtitle={menu.corner}
-                actions={
-                  <ActionPanel>
-                    <Action
-                      title="메뉴 상세"
-                      onAction={() => push(<SideMenu day={`${dayOfWeekDescriptions[day]}요일`} menu={menu} />)}
-                    />
-                  </ActionPanel>
-                }
-              />
-            ))}
-          </Grid.Section>
-        ))}
+        searchedData.map((day) => {
+          // 해당 날짜의 메뉴 중 검색어에 맞는 메뉴만 필터링
+          const filteredMenus =
+            searchText && !`${dayOfWeekDescriptions[day]}요일`.includes(searchText)
+              ? data.data[day]["2"].filter((menu) => menu.name.includes(searchText))
+              : data.data[day]["2"];
+
+          return (
+            <Grid.Section
+              key={day}
+              title={`${dayOfWeekDescriptions[day]}요일`}
+              subtitle={`${filteredMenus.length}개의 메뉴`}
+            >
+              {filteredMenus.map((menu, mealMapIdx) => (
+                <Grid.Item
+                  key={`${day}-lunch-${mealMapIdx}`}
+                  content={menu.thumbnailUrl || ""}
+                  title={menu.name}
+                  subtitle={menu.corner}
+                  actions={
+                    <ActionPanel>
+                      <Action
+                        title="메뉴 상세"
+                        onAction={() => push(<SideMenu day={`${dayOfWeekDescriptions[day]}요일`} menu={menu} />)}
+                      />
+                    </ActionPanel>
+                  }
+                />
+              ))}
+            </Grid.Section>
+          );
+        })}
     </Grid>
   );
 }
