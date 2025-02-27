@@ -9,7 +9,7 @@
   "commands": [
     {
       "name": "lunch-menu",
-      "title": "점심 메뉴",
+      "title": "밥구르미",
       "subtitle": "lunch menu",
       "description": "이번 주 점심 메뉴",
       "mode": "view"
