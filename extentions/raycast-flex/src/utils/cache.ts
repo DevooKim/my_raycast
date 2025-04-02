@@ -22,6 +22,13 @@ export const isStaleCache = (key: string) => {
 export const getCache = <T = string>(key: string): T | null => {
   const stale = isStaleCache(key);
   const cachedData = cache.get(key);
+
+  if (stale) {
+    cache.remove(key);
+    cache.remove(getExpiredKey(key));
+    return null;
+  }
+
   if (cachedData && !stale) {
     const { data } = tryCatch<T>(() => JSON.parse(cachedData));
 
