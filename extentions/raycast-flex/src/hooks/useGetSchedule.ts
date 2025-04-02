@@ -5,11 +5,6 @@ import { useCachedPromise } from "@raycast/utils";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
 import { AuthError } from "../errors/AuthError";
 
-type Preferences = {
-  cookie: string;
-  userId: string;
-};
-
 const SCHEDULE_CACHE_KEY = CACHE_KEY.SCHEDULE;
 
 const getSchedule = async ({
