@@ -65,7 +65,6 @@ export default function useGetSchedule() {
     },
     [preferences.cookie],
     {
-      initialData: "Some Text",
       abortable,
       onData: (data) => {
         if (isStaleCache(SCHEDULE_CACHE_KEY)) {
