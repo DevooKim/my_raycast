@@ -2,7 +2,8 @@ import { getPreferenceValues } from "@raycast/api";
 import { type ScheduleData } from "../types/schedules";
 import { useRef } from "react";
 import { useCachedPromise } from "@raycast/utils";
-import { CACHE_KEY, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
+import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
+import { AuthError } from "../errors/AuthError";
 
 type Preferences = {
   cookie: string;
@@ -22,17 +23,20 @@ const getSchedule = async ({
 }): Promise<ScheduleData> => {
   const url = `https://flex.team/api/v3/time-tracking/users/${userId}/work-schedules/summary/by-working-period?timestamp=${timestamp}&timezone=Asia%2FSeoul`;
 
-  const cachedData = getCache<ScheduleData>(SCHEDULE_CACHE_KEY);
-  if (cachedData) {
-    return cachedData;
-  }
-
   const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
       Cookie: `AID=${cookie}`,
     },
   });
+
+  if (response.status === 401) {
+    throw new AuthError();
+  }
+
+  if (!response.ok) {
+    throw response;
+  }
 
   const fetchedData = (await response.json()) as ScheduleData;
   const responseDate = new Date(response.headers.get("date") || "");
@@ -57,11 +61,7 @@ export default function useGetSchedule() {
         return cachedData;
       }
 
-      return await getSchedule({
-        userId,
-        cookie,
-        timestamp,
-      });
+      return await getSchedule({ userId, cookie, timestamp });
     },
     [preferences.cookie],
     {
@@ -70,6 +70,9 @@ export default function useGetSchedule() {
         if (isStaleCache(SCHEDULE_CACHE_KEY)) {
           setCacheForNextMinute(SCHEDULE_CACHE_KEY, JSON.stringify(data));
         }
+      },
+      onError: () => {
+        clearCache();
       },
     },
   );
