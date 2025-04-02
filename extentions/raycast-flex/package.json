@@ -25,7 +25,14 @@
     {
       "name": "cookie",
       "title": "Cookie",
-      "description": "12312312",
+      "description": "Enter your Cookie",
+      "type": "textfield",
+      "required": true
+    },
+    {
+      "name": "userId",
+      "title": "User ID",
+      "description": "Enter your User ID",
       "type": "textfield",
       "required": true
     }

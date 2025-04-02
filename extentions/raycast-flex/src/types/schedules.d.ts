@@ -53,4 +53,5 @@ export interface FullFlexibleResult {
 export interface ScheduleData {
   result: WorkResult;
   resultForFullFlexible: FullFlexibleResult;
+  updatedAt: number; //timestamp
 }
