@@ -8,6 +8,15 @@ export const CACHE_KEY = {
   SCHEDULE: "schedule",
 };
 
+export const clearCache = () => {
+  cache.clear();
+};
+
+export const removeCache = (key: string) => {
+  cache.remove(key);
+  cache.remove(getExpiredKey(key));
+};
+
 export const isStaleCache = (key: string) => {
   const expiredKey = getExpiredKey(key);
   const expiredTime = cache.get(expiredKey);
@@ -24,8 +33,7 @@ export const getCache = <T = string>(key: string): T | null => {
   const cachedData = cache.get(key);
 
   if (stale) {
-    cache.remove(key);
-    cache.remove(getExpiredKey(key));
+    removeCache(key);
     return null;
   }
 
