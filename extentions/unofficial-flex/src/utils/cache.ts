@@ -50,11 +50,10 @@ export const getCache = <T = string>(key: string): T | null => {
   return null;
 };
 
-export const setCacheForNextMinute = (key: string, value: string) => {
-  const scheduleData = JSON.parse(value);
+export const setCacheForNextMinute = (key: string, value: string, _timestamp?: number) => {
+  const timestamp = _timestamp || new Date().getTime();
 
-  // scheduleData.updatedAt의 그 다음 1분 00초
-  const nextMinute = new Date(scheduleData.updatedAt);
+  const nextMinute = new Date(timestamp);
   nextMinute.setMinutes(nextMinute.getMinutes() + 1);
   nextMinute.setSeconds(0);
 
@@ -64,11 +63,11 @@ export const setCacheForNextMinute = (key: string, value: string) => {
   cache.set(key, value);
 };
 
-export const setCacheForNextDay = (key: string, value: string) => {
-  const scheduleData = JSON.parse(value);
+export const setCacheForNextDay = (key: string, value: string, _timestamp?: number) => {
+  const timestamp = _timestamp || new Date().getTime();
 
   // scheduleData.updatedAt의 그 다음 1일 00시 00분
-  const nextDay = new Date(scheduleData.updatedAt);
+  const nextDay = new Date(timestamp);
   nextDay.setDate(nextDay.getDate() + 1);
   nextDay.setHours(0);
   nextDay.setMinutes(0);

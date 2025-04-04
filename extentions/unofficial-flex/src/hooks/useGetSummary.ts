@@ -63,7 +63,7 @@ export default function useGetSummary() {
       abortable,
       onData: (data) => {
         if (isStaleCache(SUMMARY_CACHE_KEY)) {
-          setCacheForNextMinute(SUMMARY_CACHE_KEY, JSON.stringify(data));
+          setCacheForNextMinute(SUMMARY_CACHE_KEY, JSON.stringify(data), data.updatedAt);
         }
       },
       onError: () => {

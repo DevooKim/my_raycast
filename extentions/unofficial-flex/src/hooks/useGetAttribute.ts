@@ -62,7 +62,7 @@ export default function useGetAttribute() {
       abortable,
       onData: (data) => {
         if (isStaleCache(ATTRIBUTES_CACHE_KEY)) {
-          setCacheForNextDay(ATTRIBUTES_CACHE_KEY, JSON.stringify(data));
+          setCacheForNextDay(ATTRIBUTES_CACHE_KEY, JSON.stringify(data), data.updatedAt);
         }
       },
       onError: () => {
