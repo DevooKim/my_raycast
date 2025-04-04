@@ -1,5 +1,6 @@
 import { Cache } from "@raycast/api";
 import { tryCatch } from "./try-catch";
+import { utcDayjs } from "./dayjs.timezone";
 
 const cache = new Cache();
 const getExpiredKey = (key: string) => `${key}-expired`;
@@ -20,13 +21,14 @@ export const removeCache = (key: string) => {
 
 export const isStaleCache = (key: string) => {
   const expiredKey = getExpiredKey(key);
-  const expiredTime = cache.get(expiredKey);
+  const expiredValue = cache.get(expiredKey);
 
-  if (!expiredTime) return true;
+  if (!expiredValue) return true;
 
-  const now = new Date().getTime();
+  const now = utcDayjs();
+  const expiredTime = utcDayjs(parseInt(expiredValue));
 
-  return now > parseInt(expiredTime);
+  return now.isAfter(expiredTime);
 };
 
 export const getCache = <T = string>(key: string): T | null => {
@@ -51,30 +53,23 @@ export const getCache = <T = string>(key: string): T | null => {
 };
 
 export const setCacheForNextMinute = (key: string, value: string, _timestamp?: number) => {
-  const timestamp = _timestamp || new Date().getTime();
+  const timestamp = utcDayjs(_timestamp).valueOf();
 
-  const nextMinute = new Date(timestamp);
-  nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-  nextMinute.setSeconds(0);
+  const nextMinute = utcDayjs(timestamp).add(1, "minute").startOf("minute").valueOf();
 
   const expiredKey = getExpiredKey(key);
 
-  cache.set(expiredKey, nextMinute.getTime().toString());
+  cache.set(expiredKey, nextMinute.toString());
   cache.set(key, value);
 };
 
 export const setCacheForNextDay = (key: string, value: string, _timestamp?: number) => {
-  const timestamp = _timestamp || new Date().getTime();
+  const timestamp = utcDayjs(_timestamp).valueOf();
 
-  // scheduleData.updatedAt의 그 다음 1일 00시 00분
-  const nextDay = new Date(timestamp);
-  nextDay.setDate(nextDay.getDate() + 1);
-  nextDay.setHours(0);
-  nextDay.setMinutes(0);
-  nextDay.setSeconds(0);
+  const nextDay = utcDayjs(timestamp).add(1, "day").startOf("day").valueOf();
 
   const expiredKey = getExpiredKey(key);
 
-  cache.set(expiredKey, nextDay.getTime().toString());
+  cache.set(expiredKey, nextDay.toString());
   cache.set(key, value);
 };
