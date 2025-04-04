@@ -52,7 +52,7 @@ export default function useGetAttribute() {
     async (cookie: string): Promise<AttributesData> => {
       const cachedData = getCache<AttributesData>(ATTRIBUTES_CACHE_KEY);
       if (cachedData) {
-        // return cachedData;
+        return cachedData;
       }
 
       return await getAttributes({ userId, cookie });
