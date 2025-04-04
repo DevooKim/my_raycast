@@ -50,8 +50,8 @@ export interface FullFlexibleResult {
 }
 
 // 전체 데이터 응답 타입
-export interface SummaryData {
+export interface ScheduleSummaryData {
   result: WorkResult;
   resultForFullFlexible: FullFlexibleResult;
-  updatedAt: number; //timestamp
+  requestedAt: number; //timestamp
 }

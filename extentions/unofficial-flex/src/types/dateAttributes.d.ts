@@ -27,7 +27,7 @@ export interface Lock {
   triggerType: "WORK_SCHEDULE_LOCK";
 }
 
-export interface AttributesData {
+export interface DateAttributesData {
   workingDayAttributes: WorkingDayAttribute[];
-  updatedAt: number; //timestamp
+  requestedAt: number; //timestamp
 }

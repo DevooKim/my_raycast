@@ -2,15 +2,15 @@ import { getPreferenceValues } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { useRef } from "react";
 
-import type { RealtimeStatus, CurrentStatus } from "../types/currentStatus";
-import type { WorkForm } from "../types/workForm";
+import type { RealtimeStatus, CurrentStatusData } from "../types/currentStatus";
+import { WorkForm } from "../types/workForm";
 
 import { AuthError } from "../errors/AuthError";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextDay } from "../utils/cache";
 
 const STATUS_CACHE_KEY = CACHE_KEY.STATUS;
 
-const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: string }): Promise<CurrentStatus> => {
+const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: string }): Promise<CurrentStatusData> => {
   const url = `https://flex.team/api/v2/time-tracking/work-clock/users/${userId}/current-status`;
 
   const response = await fetch(url, {
@@ -30,7 +30,7 @@ const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: st
     throw response;
   }
 
-  const fetchedData = (await response.json()) as CurrentStatus;
+  const fetchedData = (await response.json()) as CurrentStatusData;
   const responseDate = new Date(response.headers.get("date") || "");
 
   return {
@@ -39,7 +39,7 @@ const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: st
   };
 };
 
-const determineCurrentState = (response: CurrentStatus): RealtimeStatus => {
+const determineCurrentState = (response: CurrentStatusData): RealtimeStatus => {
   if (response?.onGoingRecordPack?.onGoing === true) {
     // 현재 근무 중인 경우
     return WorkForm[response?.onGoingRecordPack?.startRecord?.customerWorkFormId] || "알 수 없음";
@@ -76,8 +76,10 @@ export default function useGetCurrentStatus() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise(
-    async (cookie: string): Promise<{ realtimeStatus: RealtimeStatus; updatedAt: CurrentStatus["requestedAt"] }> => {
-      const cachedData = getCache<{ realtimeStatus: RealtimeStatus; updatedAt: CurrentStatus["requestedAt"] }>(
+    async (
+      cookie: string,
+    ): Promise<{ realtimeStatus: RealtimeStatus; requestedAt: CurrentStatusData["requestedAt"] }> => {
+      const cachedData = getCache<{ realtimeStatus: RealtimeStatus; requestedAt: CurrentStatusData["requestedAt"] }>(
         STATUS_CACHE_KEY,
       );
       if (cachedData) {
@@ -90,7 +92,7 @@ export default function useGetCurrentStatus() {
 
       return {
         realtimeStatus,
-        updatedAt: response.requestedAt,
+        requestedAt: response.requestedAt,
       };
     },
     [preferences.cookie],
@@ -98,7 +100,7 @@ export default function useGetCurrentStatus() {
       abortable,
       onData: (data) => {
         if (isStaleCache(STATUS_CACHE_KEY)) {
-          setCacheForNextDay(STATUS_CACHE_KEY, JSON.stringify(data), data.updatedAt);
+          setCacheForNextDay(STATUS_CACHE_KEY, JSON.stringify(data), data.requestedAt);
         }
       },
       onError: () => {

@@ -7,7 +7,7 @@ export type RealtimeStatus =
   | "알 수 없음"
   | (typeof WorkForm)[keyof typeof WorkForm];
 
-export interface CurrentStatus {
+export interface CurrentStatusData {
   targetDate: string;
   targetDayWorkSchedule: TargetDayWorkSchedule;
   onGoingRecordPack?: OnGoingRecordPack;

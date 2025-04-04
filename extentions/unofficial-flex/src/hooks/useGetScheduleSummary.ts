@@ -1,5 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
-import { type SummaryData } from "../types/summary";
+import { type ScheduleSummaryData } from "../types/scheduleSummary";
 import { useRef } from "react";
 import { useCachedPromise } from "@raycast/utils";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
@@ -7,7 +7,7 @@ import { AuthError } from "../errors/AuthError";
 
 const SUMMARY_CACHE_KEY = CACHE_KEY.SUMMARY;
 
-const getSummary = async ({
+const getScheduleSummary = async ({
   userId,
   cookie,
   timestamp,
@@ -15,7 +15,7 @@ const getSummary = async ({
   userId: string;
   cookie: string;
   timestamp: number;
-}): Promise<SummaryData> => {
+}): Promise<ScheduleSummaryData> => {
   const url = `https://flex.team/api/v3/time-tracking/users/${userId}/work-schedules/summary/by-working-period?timestamp=${timestamp}&timezone=Asia%2FSeoul`;
 
   const response = await fetch(url, {
@@ -33,16 +33,16 @@ const getSummary = async ({
     throw response;
   }
 
-  const fetchedData = (await response.json()) as SummaryData;
+  const fetchedData = (await response.json()) as ScheduleSummaryData;
   const responseDate = new Date(response.headers.get("date") || "");
 
   return {
     ...fetchedData,
-    updatedAt: new Date(responseDate).getTime(),
+    requestedAt: new Date(responseDate).getTime(),
   };
 };
 
-export default function useGetSummary() {
+export default function useGetScheduleSummary() {
   const preferences = getPreferenceValues<Preferences>();
   const userId = preferences.userId;
   const timestamp = Date.now();
@@ -50,20 +50,20 @@ export default function useGetSummary() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise(
-    async (cookie: string): Promise<SummaryData> => {
-      const cachedData = getCache<SummaryData>(SUMMARY_CACHE_KEY);
+    async (cookie: string): Promise<ScheduleSummaryData> => {
+      const cachedData = getCache<ScheduleSummaryData>(SUMMARY_CACHE_KEY);
       if (cachedData) {
         return cachedData;
       }
 
-      return await getSummary({ userId, cookie, timestamp });
+      return await getScheduleSummary({ userId, cookie, timestamp });
     },
     [preferences.cookie],
     {
       abortable,
       onData: (data) => {
         if (isStaleCache(SUMMARY_CACHE_KEY)) {
-          setCacheForNextMinute(SUMMARY_CACHE_KEY, JSON.stringify(data), data.updatedAt);
+          setCacheForNextMinute(SUMMARY_CACHE_KEY, JSON.stringify(data), data.requestedAt);
         }
       },
       onError: () => {
