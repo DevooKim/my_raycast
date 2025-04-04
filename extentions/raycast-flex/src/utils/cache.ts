@@ -5,7 +5,7 @@ const cache = new Cache();
 const getExpiredKey = (key: string) => `${key}-expired`;
 
 export const CACHE_KEY = {
-  SCHEDULE: "schedule",
+  SUMMARY: "summary",
 };
 
 export const clearCache = () => {
