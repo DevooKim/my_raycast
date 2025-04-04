@@ -6,7 +6,8 @@ const getExpiredKey = (key: string) => `${key}-expired`;
 
 export const CACHE_KEY = {
   SUMMARY: "summary",
-};
+  ATTRIBUTES: "attributes",
+} as const;
 
 export const clearCache = () => {
   cache.clear();
@@ -60,5 +61,21 @@ export const setCacheForNextMinute = (key: string, value: string) => {
   const expiredKey = getExpiredKey(key);
 
   cache.set(expiredKey, nextMinute.getTime().toString());
+  cache.set(key, value);
+};
+
+export const setCacheForNextDay = (key: string, value: string) => {
+  const scheduleData = JSON.parse(value);
+
+  // scheduleData.updatedAt의 그 다음 1일 00시 00분
+  const nextDay = new Date(scheduleData.updatedAt);
+  nextDay.setDate(nextDay.getDate() + 1);
+  nextDay.setHours(0);
+  nextDay.setMinutes(0);
+  nextDay.setSeconds(0);
+
+  const expiredKey = getExpiredKey(key);
+
+  cache.set(expiredKey, nextDay.getTime().toString());
   cache.set(key, value);
 };

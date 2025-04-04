@@ -29,4 +29,5 @@ export interface Lock {
 
 export interface AttributesData {
   workingDayAttributes: WorkingDayAttribute[];
+  updatedAt: number; //timestamp
 }
