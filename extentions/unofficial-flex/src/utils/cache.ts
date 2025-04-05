@@ -7,6 +7,7 @@ const getExpiredKey = (key: string) => `${key}-expired`;
 
 export const CACHE_KEY = {
   SUMMARY: "summary",
+  TIME_OFF: "time-off", // TIME_OFF 캐시 키 추가
   ATTRIBUTES: "attributesCache",
   STATUS: "statusCache",
 } as const;
