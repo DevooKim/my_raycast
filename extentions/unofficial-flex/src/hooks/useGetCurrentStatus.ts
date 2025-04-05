@@ -6,7 +6,7 @@ import type { RealtimeStatus, CurrentStatusData } from "../types/currentStatus";
 import { WorkForm } from "../types/workForm";
 
 import { AuthError } from "../errors/AuthError";
-import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextDay } from "../utils/cache";
+import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
 
 const STATUS_CACHE_KEY = CACHE_KEY.STATUS;
 
@@ -100,7 +100,7 @@ export default function useGetCurrentStatus() {
       abortable,
       onData: (data) => {
         if (isStaleCache(STATUS_CACHE_KEY)) {
-          setCacheForNextDay(STATUS_CACHE_KEY, JSON.stringify(data), data.requestedAt);
+          setCacheForNextMinute(STATUS_CACHE_KEY, JSON.stringify(data), data.requestedAt);
         }
       },
       onError: () => {
