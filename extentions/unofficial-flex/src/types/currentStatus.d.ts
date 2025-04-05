@@ -7,14 +7,6 @@ export type RealtimeStatus =
   | "알 수 없음"
   | (typeof WorkForm)[keyof typeof WorkForm];
 
-export interface CurrentStatusData {
-  targetDate: string;
-  targetDayWorkSchedule: TargetDayWorkSchedule;
-  onGoingRecordPack?: OnGoingRecordPack;
-  appliedZoneId: string;
-  requestedAt: number;
-}
-
 export interface TargetDayWorkSchedule {
   date: string;
   workRecords: WorkRecord[];
@@ -54,4 +46,12 @@ export interface OnGoingRecordPack {
   switchRecords: unknown[];
   restRecords: unknown[];
   onGoing: boolean;
+}
+
+export interface CurrentStatusData {
+  targetDate: string;
+  targetDayWorkSchedule: TargetDayWorkSchedule;
+  onGoingRecordPack?: OnGoingRecordPack;
+  appliedZoneId: string;
+  requestedAt: number;
 }
