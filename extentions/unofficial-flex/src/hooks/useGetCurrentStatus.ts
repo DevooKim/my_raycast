@@ -69,8 +69,13 @@ const determineCurrentState = (response: CurrentStatusResponse): RealtimeStatus 
   return "알 수 없음";
 };
 
+const calcCurrentWorkingTimeMinutes = (response: CurrentStatusResponse): number => {
+  return 0;
+};
+
 export interface CurrentStatus {
   realtimeStatus: RealtimeStatus;
+  currentWorkingMinutes: number;
   requestedAt: CurrentStatusResponse["requestedAt"];
 }
 
@@ -92,9 +97,11 @@ export default function useGetCurrentStatus() {
       const response = await getCurrentStatus({ userId, cookie });
 
       const realtimeStatus = determineCurrentState(response);
+      const currentWorkTime = calcCurrentWorkingTimeMinutes(response);
 
       return {
         realtimeStatus,
+        currentWorkingMinutes: currentWorkTime,
         requestedAt: response.requestedAt,
       };
     },
