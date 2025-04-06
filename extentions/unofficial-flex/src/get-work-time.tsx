@@ -6,16 +6,7 @@ import useGetTimeOff from "./hooks/useGetTimeOff";
 import { RealtimeStatus } from "./types/currentStatus";
 import useGetDateAttribute from "./hooks/useGetDateAttribute";
 import { seoulDayjs } from "./utils/dayjs.timezone";
-
-/**
- *
- * Icon.Calendar
- * Icon.Calculator
- * Icon.Building
- * Icon.CircleProgress
- * Icon.Clock
- * Icon.MugSteam
- */
+import { TimeOffRegisterUnitValue } from "./types/timeOff";
 
 const ScheduleSummary = () => {
   const scheduleSummary = useGetScheduleSummary();
@@ -167,17 +158,21 @@ const TimeOff = () => {
   }
 
   const timeOffList = timeOff.data!.timeOffList;
+  const timeOffPolicyMap = timeOff.data!.timeOffPolicyMap;
 
   return (
     <>
-      {timeOffList.map((timeOff) => (
+      {timeOffList.map((eventBlock) => (
         <List.Item
-          key={`${timeOff.blockDate}-${timeOff.userTimeOffRegisterEventId}`}
-          title={timeOff.blockDate}
-          subtitle={timeOff.userTimeOffRegisterEventId}
+          key={`${eventBlock.blockDate}-${eventBlock.userTimeOffRegisterEventId}`}
+          title={eventBlock.blockDate}
+          subtitle={timeOffPolicyMap[eventBlock.timeOffPolicyId]?.name}
           accessories={[
-            { tag: { value: timeOff.timeOffRegisterUnit, color: Color.Blue }, icon: Icon.Airplane },
-            { text: minutesToHourString(timeOff.usedMinutes) },
+            {
+              tag: { value: TimeOffRegisterUnitValue[eventBlock.timeOffRegisterUnit], color: Color.Blue },
+              icon: Icon.Airplane,
+            },
+            { text: minutesToHourString(eventBlock.usedMinutes) },
           ]}
         />
       ))}
