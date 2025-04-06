@@ -7,6 +7,7 @@ import { WorkForm } from "../types/workForm";
 
 import { AuthError } from "../errors/AuthError";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
+import { seoulDayjs } from "../utils/dayjs.timezone";
 
 const STATUS_CACHE_KEY = CACHE_KEY.STATUS;
 
@@ -70,7 +71,21 @@ const determineCurrentState = (response: CurrentStatusResponse): RealtimeStatus 
 };
 
 const calcCurrentWorkingTimeMinutes = (response: CurrentStatusResponse): number => {
-  return 0;
+  const recordsMinute = response.targetDayWorkSchedule.workRecords.reduce((acc, record) => {
+    const start = record.blockTimeFrom.timeStamp;
+    const end = record.blockTimeTo.timeStamp;
+    return seoulDayjs(end).diff(seoulDayjs(start), "minute") + acc;
+  }, 0);
+
+  const restTypeRecordsMinute = response.targetDayWorkSchedule.workRecords
+    .filter((record) => record.workFormType === "REST")
+    .reduce((acc, record) => {
+      const start = record.blockTimeFrom.timeStamp;
+      const end = record.blockTimeTo.timeStamp;
+      return seoulDayjs(end).diff(seoulDayjs(start), "minute") + acc;
+    }, 0);
+
+  return recordsMinute - restTypeRecordsMinute;
 };
 
 export interface CurrentStatus {
