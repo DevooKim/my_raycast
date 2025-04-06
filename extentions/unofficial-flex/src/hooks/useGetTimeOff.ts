@@ -55,7 +55,14 @@ export default function useGetTimeOff() {
 
       const response = await getTimeOff({ userId, cookie });
 
-      const timeOffList = response.timeOffUses.map((item) => item.userTimeOffRegisterEventBlocks).flat();
+      const timeOffList = response.timeOffUses
+        .map((item) =>
+          item.userTimeOffRegisterEventBlocks.map((block) => ({
+            ...block,
+            blockDate: `${block.blockDate} ${seoulDayjs(block.blockDate).format("dd")}`,
+          })),
+        )
+        .flat();
 
       return {
         timeOffList,
