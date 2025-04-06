@@ -8,8 +8,8 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "get-work-time",
-      "title": "get work time",
+      "name": "working-time",
+      "title": "Working Time",
       "description": "",
       "mode": "view"
     },
