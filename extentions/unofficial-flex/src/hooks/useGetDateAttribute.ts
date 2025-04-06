@@ -2,15 +2,21 @@ import { getPreferenceValues } from "@raycast/api";
 import { useCachedPromise } from "@raycast/utils";
 import { useRef } from "react";
 
-import { type DateAttributesData } from "../types/dateAttributes";
+import { DateAttributes, type DateAttributesResponse } from "../types/dateAttributes";
 
 import { AuthError } from "../errors/AuthError";
-import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextDay } from "../utils/cache";
+import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextHour } from "../utils/cache";
 import { seoulDayjs } from "../utils/dayjs.timezone";
 
 const ATTRIBUTES_CACHE_KEY = CACHE_KEY.ATTRIBUTES;
 
-const getDateAttributes = async ({ userId, cookie }: { userId: string; cookie: string }): Promise<DateAttributesData> => {
+const getDateAttributes = async ({
+  userId,
+  cookie,
+}: {
+  userId: string;
+  cookie: string;
+}): Promise<{ requestedAt: number } & DateAttributesResponse> => {
   const from = seoulDayjs().startOf("month").format("YYYY-MM-DD");
   const to = seoulDayjs().endOf("month").format("YYYY-MM-DD");
 
@@ -33,13 +39,20 @@ const getDateAttributes = async ({ userId, cookie }: { userId: string; cookie: s
     throw response;
   }
 
-  const fetchedData = (await response.json()) as DateAttributesData;
+  const fetchedData = (await response.json()) as DateAttributesResponse;
   const responseDate = new Date(response.headers.get("date") || "");
 
   return {
     ...fetchedData,
     requestedAt: new Date(responseDate).getTime(),
   };
+};
+
+const parseDateAttributes = (data: DateAttributesResponse) => {
+  const totalDaysOfMonth = data.workingDayAttributes.length;
+  const dayOffCountOfMonth = data.workingDayAttributes.filter((day) => day.dayOffs.length).length;
+
+  return { totalDaysOfMonth, dayOffCountOfMonth };
 };
 
 export default function useGetDateAttribute() {
@@ -49,20 +62,32 @@ export default function useGetDateAttribute() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise(
-    async (cookie: string): Promise<DateAttributesData> => {
-      const cachedData = getCache<DateAttributesData>(ATTRIBUTES_CACHE_KEY);
+    async (cookie: string): Promise<DateAttributes> => {
+      const cachedData = getCache<DateAttributes>(ATTRIBUTES_CACHE_KEY);
       if (cachedData) {
         return cachedData;
       }
 
-      return await getDateAttributes({ userId, cookie });
+      const response = await getDateAttributes({ userId, cookie });
+
+      const parsedDateAttributes = parseDateAttributes(response);
+
+      return {
+        ...parsedDateAttributes,
+        requestedAt: response.requestedAt,
+      };
     },
     [preferences.cookie],
     {
       abortable,
       onData: (data) => {
         if (isStaleCache(ATTRIBUTES_CACHE_KEY)) {
-          setCacheForNextDay(ATTRIBUTES_CACHE_KEY, JSON.stringify(data), data.requestedAt);
+          setCacheForNextHour({
+            key: ATTRIBUTES_CACHE_KEY,
+            value: JSON.stringify(data),
+            validHours: 3,
+            timestamp: data.requestedAt,
+          });
         }
       },
       onError: () => {

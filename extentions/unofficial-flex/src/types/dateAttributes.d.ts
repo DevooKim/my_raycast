@@ -27,7 +27,12 @@ export interface Lock {
   triggerType: "WORK_SCHEDULE_LOCK";
 }
 
-export interface DateAttributesData {
+export interface DateAttributesResponse {
   workingDayAttributes: WorkingDayAttribute[];
-  requestedAt: number; //timestamp
+}
+
+export interface DateAttributes {
+  totalDaysOfMonth: number;
+  dayOffCountOfMonth: number;
+  requestedAt: number;
 }

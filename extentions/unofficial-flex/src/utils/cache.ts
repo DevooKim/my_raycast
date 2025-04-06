@@ -79,6 +79,27 @@ export const setCacheForNextMinute = ({
   cache.set(key, value);
 };
 
+export const setCacheForNextHour = ({
+  key,
+  value,
+  validHours = 1,
+  timestamp,
+}: {
+  key: string;
+  value: string;
+  validHours?: number;
+  timestamp?: number;
+}) => {
+  const timestampValue = utcDayjs(timestamp).valueOf();
+
+  const nextHour = utcDayjs(timestampValue).add(validHours, "hour").startOf("hour").valueOf();
+
+  const expiredKey = getExpiredKey(key);
+
+  cache.set(expiredKey, nextHour.toString());
+  cache.set(key, value);
+};
+
 export const setCacheForNextDay = ({
   key,
   value,
