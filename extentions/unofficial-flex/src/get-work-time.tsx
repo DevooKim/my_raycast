@@ -162,17 +162,17 @@ const TimeOff = () => {
 
   return (
     <>
-      {timeOffList.map((eventBlock) => (
+      {timeOffList.map((timeOffEvent) => (
         <List.Item
-          key={`${eventBlock.blockDate}-${eventBlock.userTimeOffRegisterEventId}`}
-          title={eventBlock.blockDate}
-          subtitle={timeOffPolicyMap[eventBlock.timeOffPolicyId]?.name}
+          key={`${timeOffEvent.blockDate}-${timeOffEvent.userTimeOffRegisterEventId}`}
+          title={timeOffEvent.blockDate}
+          subtitle={timeOffPolicyMap[timeOffEvent.timeOffPolicyId]?.name}
           accessories={[
             {
-              tag: { value: TimeOffRegisterUnitValue[eventBlock.timeOffRegisterUnit], color: Color.Blue },
+              tag: { value: TimeOffRegisterUnitValue[timeOffEvent.timeOffRegisterUnit], color: Color.Blue },
               icon: Icon.Airplane,
             },
-            { text: minutesToHourString(eventBlock.usedMinutes) },
+            { text: minutesToHourString(timeOffEvent.usedMinutes) },
           ]}
         />
       ))}
