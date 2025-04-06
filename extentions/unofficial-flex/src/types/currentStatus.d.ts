@@ -2,7 +2,6 @@ import type { WorkForm } from "./workForm";
 
 export type RealtimeStatus =
   | "시작 전"
-  | "근무 중"
   | "근무 종료"
   | "알 수 없음"
   | (typeof WorkForm)[keyof typeof WorkForm];
@@ -48,7 +47,7 @@ export interface OnGoingRecordPack {
   onGoing: boolean;
 }
 
-export interface CurrentStatusData {
+export interface CurrentStatusResponse {
   targetDate: string;
   targetDayWorkSchedule: TargetDayWorkSchedule;
   onGoingRecordPack?: OnGoingRecordPack;

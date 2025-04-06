@@ -1,8 +1,8 @@
 import { getPreferenceValues } from "@raycast/api";
-import { useCachedPromise } from "@raycast/utils";
+import { AsyncState, useCachedPromise, usePromise } from "@raycast/utils";
 import { useRef } from "react";
 
-import type { RealtimeStatus, CurrentStatusData } from "../types/currentStatus";
+import type { RealtimeStatus, CurrentStatusResponse } from "../types/currentStatus";
 import { WorkForm } from "../types/workForm";
 
 import { AuthError } from "../errors/AuthError";
@@ -10,7 +10,13 @@ import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } 
 
 const STATUS_CACHE_KEY = CACHE_KEY.STATUS;
 
-const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: string }): Promise<CurrentStatusData> => {
+const getCurrentStatus = async ({
+  userId,
+  cookie,
+}: {
+  userId: string;
+  cookie: string;
+}): Promise<CurrentStatusResponse> => {
   const url = `https://flex.team/api/v2/time-tracking/work-clock/users/${userId}/current-status`;
 
   const response = await fetch(url, {
@@ -30,7 +36,7 @@ const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: st
     throw response;
   }
 
-  const fetchedData = (await response.json()) as CurrentStatusData;
+  const fetchedData = (await response.json()) as CurrentStatusResponse;
   const responseDate = new Date(response.headers.get("date") || "");
 
   return {
@@ -39,35 +45,36 @@ const getCurrentStatus = async ({ userId, cookie }: { userId: string; cookie: st
   };
 };
 
-const determineCurrentState = (response: CurrentStatusData): RealtimeStatus => {
+const determineCurrentState = (response: CurrentStatusResponse): RealtimeStatus => {
   if (response?.onGoingRecordPack?.onGoing === true) {
     // 현재 근무 중인 경우
     return WorkForm[response?.onGoingRecordPack?.startRecord?.customerWorkFormId] || "알 수 없음";
-  } else {
-    // 근무 중이 아닌 경우
-    const workRecords = response?.targetDayWorkSchedule?.workRecords;
+  }
 
-    if (workRecords && workRecords.length > 0) {
-      // 첫 번째 근무 시작 시간 이전인지 확인
-      const firstWorkStart = workRecords[0]?.blockTimeFrom?.timeStamp;
+  const workRecords = response?.targetDayWorkSchedule?.workRecords;
+  const timeOffs = response?.targetDayWorkSchedule?.timeOffs;
 
-      if (firstWorkStart && response.requestedAt < firstWorkStart) {
-        return "시작 전";
-      } else {
-        // 마지막 근무 종료 시간 이후인지 확인
-        const lastWorkEnd = workRecords[workRecords.length - 1]?.blockTimeTo?.timeStamp;
+  if (workRecords.length === 0 && timeOffs.length === 0) {
+    return "시작 전";
+  }
 
-        if (lastWorkEnd && response.requestedAt > lastWorkEnd) {
-          return "근무 종료";
-        } else {
-          return "휴게";
-        }
-      }
-    }
+  const lastRecord = workRecords[workRecords.length - 1];
+  const lastRecordEnd = lastRecord?.blockTimeTo?.timeStamp;
+
+  if (lastRecordEnd && response.requestedAt > lastRecordEnd) {
+    // 마지막 근무 종료 시간 이후인지 확인
+    return "근무 종료";
   }
 
   return "알 수 없음";
 };
+
+export interface CurrentStatus {
+  realtimeStatus: RealtimeStatus;
+  requestedAt: CurrentStatusResponse["requestedAt"];
+}
+
+type CachedPromise = (cookie: string) => Promise<CurrentStatus>;
 
 export default function useGetCurrentStatus() {
   const preferences = getPreferenceValues<Preferences>();
@@ -75,13 +82,9 @@ export default function useGetCurrentStatus() {
 
   const abortable = useRef<AbortController>(null);
 
-  const result = useCachedPromise(
-    async (
-      cookie: string,
-    ): Promise<{ realtimeStatus: RealtimeStatus; requestedAt: CurrentStatusData["requestedAt"] }> => {
-      const cachedData = getCache<{ realtimeStatus: RealtimeStatus; requestedAt: CurrentStatusData["requestedAt"] }>(
-        STATUS_CACHE_KEY,
-      );
+  const result = useCachedPromise<CachedPromise>(
+    async (cookie: string) => {
+      const cachedData = getCache<CurrentStatus>(STATUS_CACHE_KEY);
       if (cachedData) {
         return cachedData;
       }
