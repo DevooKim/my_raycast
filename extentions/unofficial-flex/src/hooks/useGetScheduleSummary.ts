@@ -63,7 +63,11 @@ export default function useGetScheduleSummary() {
       abortable,
       onData: (data) => {
         if (isStaleCache(SUMMARY_CACHE_KEY)) {
-          setCacheForNextMinute(SUMMARY_CACHE_KEY, JSON.stringify(data), data.requestedAt);
+          setCacheForNextMinute({
+            key: SUMMARY_CACHE_KEY,
+            value: JSON.stringify(data),
+            timestamp: data.requestedAt,
+          });
         }
       },
       onError: () => {

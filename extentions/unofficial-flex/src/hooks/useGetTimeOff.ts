@@ -74,7 +74,11 @@ export default function useGetTimeOff() {
       abortable,
       onData: (data) => {
         if (isStaleCache(TIME_OFF_CACHE_KEY)) {
-          setCacheForNextMinute(TIME_OFF_CACHE_KEY, JSON.stringify(data), data.requestedAt);
+          setCacheForNextMinute({
+            key: TIME_OFF_CACHE_KEY,
+            value: JSON.stringify(data),
+            validMinutes: data.requestedAt,
+          });
         }
       },
       onError: () => {

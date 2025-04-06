@@ -58,10 +58,20 @@ export const getCache = <T = string>(key: string): T | null => {
   return null;
 };
 
-export const setCacheForNextMinute = (key: string, value: string, _timestamp?: number) => {
-  const timestamp = utcDayjs(_timestamp).valueOf();
+export const setCacheForNextMinute = ({
+  key,
+  value,
+  validMinutes = 1,
+  timestamp,
+}: {
+  key: string;
+  value: string;
+  validMinutes?: number;
+  timestamp?: number;
+}) => {
+  const timestampValue = utcDayjs(timestamp).valueOf();
 
-  const nextMinute = utcDayjs(timestamp).add(1, "minute").startOf("minute").valueOf();
+  const nextMinute = utcDayjs(timestampValue).add(validMinutes, "minute").startOf("minute").valueOf();
 
   const expiredKey = getExpiredKey(key);
 
@@ -69,10 +79,20 @@ export const setCacheForNextMinute = (key: string, value: string, _timestamp?: n
   cache.set(key, value);
 };
 
-export const setCacheForNextDay = (key: string, value: string, _timestamp?: number) => {
-  const timestamp = utcDayjs(_timestamp).valueOf();
+export const setCacheForNextDay = ({
+  key,
+  value,
+  validDays = 1,
+  timestamp,
+}: {
+  key: string;
+  value: string;
+  validDays?: number;
+  timestamp?: number;
+}) => {
+  const timestampValue = utcDayjs(timestamp).valueOf();
 
-  const nextDay = utcDayjs(timestamp).add(1, "day").startOf("day").valueOf();
+  const nextDay = utcDayjs(timestampValue).add(validDays, "day").startOf("day").valueOf();
 
   const expiredKey = getExpiredKey(key);
 

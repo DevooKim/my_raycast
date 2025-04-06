@@ -125,7 +125,7 @@ export default function useGetCurrentStatus() {
       abortable,
       onData: (data) => {
         if (isStaleCache(STATUS_CACHE_KEY)) {
-          setCacheForNextMinute(STATUS_CACHE_KEY, JSON.stringify(data), data.requestedAt);
+          setCacheForNextMinute({ key: STATUS_CACHE_KEY, value: JSON.stringify(data), _timestamp: data.requestedAt });
         }
       },
       onError: () => {
