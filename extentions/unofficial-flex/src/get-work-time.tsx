@@ -1,27 +1,95 @@
-import { Color, Detail, Icon, List } from "@raycast/api";
+import { Color, Icon, List } from "@raycast/api";
 import useGetScheduleSummary from "./hooks/useGetScheduleSummary";
 import useGetCurrentStatus from "./hooks/useGetCurrentStatus";
-import { minutesToHourString } from "./utils/string";
+import { minutesToDayString, minutesToHourString } from "./utils/string";
 import useGetTimeOff from "./hooks/useGetTimeOff";
-import { CurrentStatusResponse, RealtimeStatus } from "./types/currentStatus";
+import { RealtimeStatus } from "./types/currentStatus";
+import useGetDateAttribute from "./hooks/useGetDateAttribute";
+import { seoulDayjs } from "./utils/dayjs.timezone";
 
-const Mock = () => {
+/**
+ *
+ * Icon.Calendar
+ * Icon.Calculator
+ * Icon.Building
+ * Icon.CircleProgress
+ * Icon.Clock
+ * Icon.MugSteam
+ */
+
+const ScheduleSummary = () => {
+  const scheduleSummary = useGetScheduleSummary();
+  const dateAttributes = useGetDateAttribute();
+
+  if (scheduleSummary.isLoading || dateAttributes.isLoading) {
+    return <List.Item title="Loading..." />;
+  }
+  if (scheduleSummary.error) {
+    return <List.Item title="Error" subtitle={scheduleSummary.error.message} />;
+  }
+  if (dateAttributes.error) {
+    return <List.Item title="Error" subtitle={dateAttributes.error.message} />;
+  }
+
+  const 이번달_해야하는_근무일 = dateAttributes.data!.totalDaysOfMonth - dateAttributes.data!.dayOffCountOfMonth;
+  const 이번달_남은_근무일 = scheduleSummary.data!.resultForFullFlexible.remainingDaysByEndDateOfWorkingPeriod;
+
+  const 이번달_연차_minutes = 2400;
+
+  const 이번달_근무시간_minutes = scheduleSummary.data!.result.totalRecognizedWorkingMinutes;
+  const 이번달_해야하는_근무시간_minutes = 8 * 60 * 이번달_해야하는_근무일;
+  const 이반달_남은_최소_근무시간_minutes = Math.max(이번달_해야하는_근무시간_minutes - 이번달_근무시간_minutes, 0);
+
   return (
-    <List>
+    <>
       <List.Item
-        title="An Item with Accessories"
+        title="이번 달 근무일"
         accessories={[
-          { text: `An Accessory Text`, icon: Icon.Hammer },
-          { text: { value: `A Colored Accessory Text`, color: Color.Orange }, icon: Icon.Hammer },
-          { icon: Icon.Person, tooltip: "A person" },
-          { text: "Just Do It!" },
-          { date: new Date() },
-          { tag: new Date() },
-          { tag: { value: new Date(), color: Color.Magenta } },
-          { tag: { value: "User", color: Color.Magenta }, tooltip: "Tag with tooltip" },
+          {
+            text: {
+              value: `${이번달_남은_근무일} / ${이번달_해야하는_근무일}`,
+              color: Color.Blue,
+            },
+            icon: Icon.Calendar,
+          },
+          {
+            tag: {
+              value: `연차 ${minutesToDayString(이번달_연차_minutes)} 포함`,
+            },
+          },
         ]}
       />
-    </List>
+
+      <List.Item
+        title="이번 달 근무 시간"
+        accessories={[
+          {
+            text: {
+              value: `${minutesToHourString(이번달_근무시간_minutes)} / ${minutesToHourString(이번달_해야하는_근무시간_minutes)}`,
+              color: Color.Blue,
+            },
+            icon: Icon.Clock,
+          },
+          {
+            tag: {
+              value: `연차 ${minutesToHourString(이번달_연차_minutes)} 포함`,
+            },
+          },
+        ]}
+      />
+      <List.Item
+        title="이번 달 남은 최소 근무 시간"
+        accessories={[
+          {
+            text: {
+              value: `${minutesToHourString(이반달_남은_최소_근무시간_minutes)}`,
+              color: Color.Blue,
+            },
+            icon: Icon.Clock,
+          },
+        ]}
+      />
+    </>
   );
 };
 
@@ -48,13 +116,33 @@ const CurrentStatus = () => {
     }
   };
 
+  const statusIcon = (status: RealtimeStatus) => {
+    switch (status) {
+      case "시작 전":
+        return Icon.Signal0;
+      case "근무 종료":
+        return Icon.House;
+      case "알 수 없음":
+        return Icon.XMarkCircle;
+      case "휴게":
+        return Icon.MugSteam;
+      // case "휴가":
+      //   return Icon.Airplane;
+      default:
+        return Icon.Signal3;
+    }
+  };
+
   const 현재_근무상태 = currentStatus.data!.realtimeStatus;
   const 현재_근무시간_minutes = currentStatus.data!.currentWorkingMinutes;
 
   const isWorking = !(현재_근무상태 === "시작 전" || 현재_근무상태 === "알 수 없음" || 현재_근무상태 === "근무 종료");
 
   const accessories = [
-    { text: { value: currentStatus.data!.realtimeStatus, color: statusColor(현재_근무상태) }, icon: Icon.Hammer },
+    {
+      text: { value: currentStatus.data!.realtimeStatus, color: statusColor(현재_근무상태) },
+      icon: statusIcon(현재_근무상태),
+    },
     isWorking && {
       text: { value: minutesToHourString(현재_근무시간_minutes), color: Color.Green },
       icon: Icon.Hammer,
@@ -65,28 +153,6 @@ const CurrentStatus = () => {
     <>
       <List.Item title="출근 상태" accessories={accessories} />
     </>
-  );
-};
-
-const ScheduleSummary = () => {
-  const scheduleSummary = useGetScheduleSummary();
-
-  if (scheduleSummary.isLoading) {
-    return <List.Item title="Loading..." />;
-  }
-  if (scheduleSummary.error) {
-    return <List.Item title="Error" subtitle={scheduleSummary.error.message} />;
-  }
-
-  const 이번달_근무시간_minutes = scheduleSummary.data!.result.totalRecognizedWorkingMinutes;
-
-  return (
-    <List.Item
-      title="이번 달 근무 시간"
-      accessories={[
-        { text: { value: minutesToHourString(이번달_근무시간_minutes), color: Color.Blue }, icon: Icon.Hammer },
-      ]}
-    />
   );
 };
 
@@ -106,12 +172,12 @@ const TimeOff = () => {
     <>
       {timeOffList.map((timeOff) => (
         <List.Item
-          key={timeOff.userTimeOffRegisterEventId}
+          key={`${timeOff.blockDate}-${timeOff.userTimeOffRegisterEventId}`}
           title={timeOff.blockDate}
           subtitle={timeOff.userTimeOffRegisterEventId}
           accessories={[
-            { tag: { value: timeOff.timeOffRegisterUnit, color: Color.Blue }, icon: Icon.Hammer },
-            { text: minutesToHourString(timeOff.usedMinutes), icon: Icon.Hammer },
+            { tag: { value: timeOff.timeOffRegisterUnit, color: Color.Blue }, icon: Icon.Airplane },
+            { text: minutesToHourString(timeOff.usedMinutes) },
           ]}
         />
       ))}
@@ -120,9 +186,12 @@ const TimeOff = () => {
 };
 
 export default function Command() {
+  const now = seoulDayjs();
+  const currentMonth = now.format("M");
+
   return (
     <List>
-      <List.Section title="월 정보">
+      <List.Section title={`${currentMonth}월 정보`}>
         <ScheduleSummary />
       </List.Section>
       <List.Section title="현재 근무 상태">

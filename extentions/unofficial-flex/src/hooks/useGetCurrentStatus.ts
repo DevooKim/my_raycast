@@ -59,6 +59,8 @@ const determineCurrentState = (response: CurrentStatusResponse): RealtimeStatus 
     return "시작 전";
   }
 
+  // TODO: 휴가 상태 추가
+
   const lastRecord = workRecords[workRecords.length - 1];
   const lastRecordEnd = lastRecord?.blockTimeTo?.timeStamp;
 
