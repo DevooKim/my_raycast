@@ -1,4 +1,4 @@
-import { Cache } from "@raycast/api";
+import { Cache, environment } from "@raycast/api";
 import { tryCatch } from "./try-catch";
 import { utcDayjs } from "./dayjs.timezone";
 
@@ -36,6 +36,10 @@ export const isStaleCache = (key: string) => {
 export const getCache = <T = string>(key: string): T | null => {
   const stale = isStaleCache(key);
   const cachedData = cache.get(key);
+
+  if (environment.isDevelopment) {
+    return null;
+  }
 
   if (stale) {
     removeCache(key);
