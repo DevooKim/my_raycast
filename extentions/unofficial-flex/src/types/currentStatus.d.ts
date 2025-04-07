@@ -1,10 +1,8 @@
 import type { WorkForm } from "./workForm";
 
-export type RealtimeStatus =
-  | "시작 전"
-  | "근무 종료"
-  | "알 수 없음"
-  | (typeof WorkForm)[keyof typeof WorkForm];
+export type EventType = "START" | "REST_START" | "REST_STOP";
+export type RecordType = "RECORD" | "PLAN_BY_AUTO";
+export type RealtimeStatus = "시작 전" | "근무 종료" | "알 수 없음" | (typeof WorkForm)[keyof typeof WorkForm];
 
 export interface TargetDayWorkSchedule {
   date: string;
@@ -33,6 +31,20 @@ export interface WorkBlock {
   legalCategory: string;
 }
 
+export interface OnGoingRecord {
+  id: string;
+  eventType: EventType;
+  targetTime: number;
+  customerWorkFormId?: keyof typeof WorkForm;
+  recordType: string;
+  zoneId: string;
+}
+
+export interface RestRecord {
+  restStartRecord: OnGoingRecord;
+  restStopRecord: OnGoingRecord;
+}
+
 export interface OnGoingRecordPack {
   startRecord: {
     id: string;
@@ -43,7 +55,7 @@ export interface OnGoingRecordPack {
     zoneId: string;
   };
   switchRecords: unknown[];
-  restRecords: unknown[];
+  restRecords: RestRecord[];
   onGoing: boolean;
 }
 

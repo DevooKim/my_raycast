@@ -102,6 +102,8 @@ const CurrentStatus = () => {
         return Color.Orange;
       case "알 수 없음":
         return Color.Red;
+      case "휴게":
+        return Color.Yellow;
       default:
         return Color.Blue;
     }
@@ -125,17 +127,20 @@ const CurrentStatus = () => {
   };
 
   const 현재_근무상태 = currentStatus.data!.realtimeStatus;
-  const 현재_근무시간_minutes = currentStatus.data!.currentWorkingMinutes;
+  const { currentWorkingMinutes, recordingRestMinutes } = currentStatus.data!;
 
-  const isWorking = !(현재_근무상태 === "시작 전" || 현재_근무상태 === "알 수 없음" || 현재_근무상태 === "근무 종료");
+  const isBeforeWork = 현재_근무상태 === "시작 전";
 
   const accessories = [
     {
       text: { value: currentStatus.data!.realtimeStatus, color: statusColor(현재_근무상태) },
       icon: statusIcon(현재_근무상태),
     },
-    isWorking && {
-      text: { value: minutesToHourString(현재_근무시간_minutes), color: Color.Green },
+    !isBeforeWork && {
+      text: {
+        value: minutesToHourString(현재_근무상태 === "휴게" ? recordingRestMinutes : currentWorkingMinutes),
+        color: statusColor(현재_근무상태),
+      },
       icon: Icon.Hammer,
     },
   ].filter(Boolean) as List.Item.Accessory[];

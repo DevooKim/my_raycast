@@ -1,5 +1,5 @@
 import { getPreferenceValues } from "@raycast/api";
-import { AsyncState, useCachedPromise, usePromise } from "@raycast/utils";
+import { useCachedPromise } from "@raycast/utils";
 import { useRef } from "react";
 
 import type { RealtimeStatus, CurrentStatusResponse } from "../types/currentStatus";
@@ -47,9 +47,9 @@ const getCurrentStatus = async ({
 };
 
 const determineCurrentState = (response: CurrentStatusResponse): RealtimeStatus => {
-  if (response?.onGoingRecordPack?.onGoing === true) {
+  if (response?.onGoingRecordPack?.onGoing) {
     // 현재 근무 중인 경우
-    return WorkForm[response?.onGoingRecordPack?.startRecord?.customerWorkFormId] || "알 수 없음";
+    return WorkForm[response?.onGoingRecordPack?.startRecord?.customerWorkFormId] ?? "휴게";
   }
 
   const workRecords = response?.targetDayWorkSchedule?.workRecords;
@@ -72,14 +72,40 @@ const determineCurrentState = (response: CurrentStatusResponse): RealtimeStatus 
   return "알 수 없음";
 };
 
-const calcCurrentWorkingTimeMinutes = (response: CurrentStatusResponse): number => {
-  const recordsMinute = response.targetDayWorkSchedule.workRecords.reduce((acc, record) => {
-    const start = record.blockTimeFrom.timeStamp;
-    const end = record.blockTimeTo.timeStamp;
-    return seoulDayjs(end).diff(seoulDayjs(start), "minute") + acc;
-  }, 0);
+const calcCurrentWorkingTimeMinutes = (
+  response: CurrentStatusResponse,
+): {
+  currentWorkingMinutes: number;
+  recordingRestMinutes: number;
+} => {
+  // 근무시작시간 ~ 요청시간
+  const workTypeRecordingMinute = seoulDayjs(response.requestedAt).diff(
+    response.onGoingRecordPack?.startRecord?.targetTime ?? response.requestedAt,
+    "minute",
+  );
 
-  const restTypeRecordsMinute = response.targetDayWorkSchedule.workRecords
+  // (휴게시작시간 ~ 요청시간) - (휴게종료시간 ~ 요청시간)
+  const restTypeRecordingMinute =
+    response.onGoingRecordPack?.restRecords?.reduce((acc, record) => {
+      const requestToStart = Math.min(seoulDayjs(record?.restStartRecord?.targetTime).diff(response.requestedAt), 0);
+      const requestToStop = Math.min(seoulDayjs(record?.restStopRecord?.targetTime).diff(response.requestedAt), 0);
+
+      return acc + seoulDayjs(requestToStop).diff(seoulDayjs(requestToStart), "minute");
+    }, 0) ?? 0;
+
+  const 현재_기록중인_근무시간_minute = Math.max(workTypeRecordingMinute - restTypeRecordingMinute, 0);
+
+  // 근무로 기록된 시간
+  const workTypeRecordedMinute = response.targetDayWorkSchedule.workRecords
+    .filter((record) => record.workFormType === "WORK")
+    .reduce((acc, record) => {
+      const start = record.blockTimeFrom.timeStamp;
+      const end = record.blockTimeTo.timeStamp;
+      return seoulDayjs(end).diff(seoulDayjs(start), "minute") + acc;
+    }, 0);
+
+  // 휴게로 기록된 시간
+  const restTypeRecordedMinute = response.targetDayWorkSchedule.workRecords
     .filter((record) => record.workFormType === "REST")
     .reduce((acc, record) => {
       const start = record.blockTimeFrom.timeStamp;
@@ -87,12 +113,18 @@ const calcCurrentWorkingTimeMinutes = (response: CurrentStatusResponse): number 
       return seoulDayjs(end).diff(seoulDayjs(start), "minute") + acc;
     }, 0);
 
-  return recordsMinute - restTypeRecordsMinute;
+  const recordsMinute = workTypeRecordedMinute - restTypeRecordedMinute;
+
+  return {
+    currentWorkingMinutes: 현재_기록중인_근무시간_minute + recordsMinute,
+    recordingRestMinutes: restTypeRecordingMinute,
+  };
 };
 
 export interface CurrentStatus {
   realtimeStatus: RealtimeStatus;
   currentWorkingMinutes: number;
+  recordingRestMinutes: number;
   requestedAt: CurrentStatusResponse["requestedAt"];
 }
 
@@ -114,11 +146,12 @@ export default function useGetCurrentStatus() {
       const response = await getCurrentStatus({ userId, cookie });
 
       const realtimeStatus = determineCurrentState(response);
-      const currentWorkTime = calcCurrentWorkingTimeMinutes(response);
+      const { currentWorkingMinutes, recordingRestMinutes } = calcCurrentWorkingTimeMinutes(response);
 
       return {
         realtimeStatus,
-        currentWorkingMinutes: currentWorkTime,
+        currentWorkingMinutes,
+        recordingRestMinutes,
         requestedAt: response.requestedAt,
       };
     },
