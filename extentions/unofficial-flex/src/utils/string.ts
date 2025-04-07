@@ -2,7 +2,7 @@ const WORK_HOURS_PER_DAY = 8;
 const HOURS_TO_MINUTES = 60;
 
 export const minutesToHourString = (minutes: number): string => {
-  const hours = Math.floor(minutes / HOURS_TO_MINUTES);
+  const hours = Math.floor(minutes / HOURS_TO_MINUTES) + (minutes < 0 ? 1 : 0);
   const remainingMinutes = minutes % HOURS_TO_MINUTES;
 
   if (hours === 0) {

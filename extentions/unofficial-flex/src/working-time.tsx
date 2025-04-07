@@ -11,8 +11,9 @@ import { TimeOffRegisterUnitValue } from "./types/timeOff";
 const ScheduleSummary = () => {
   const scheduleSummary = useGetScheduleSummary();
   const dateAttributes = useGetDateAttribute();
+  const currentStatus = useGetCurrentStatus();
 
-  if (scheduleSummary.isLoading || dateAttributes.isLoading) {
+  if (scheduleSummary.isLoading || dateAttributes.isLoading || currentStatus.isLoading) {
     return <List.Item title="Loading..." />;
   }
   if (scheduleSummary.error) {
@@ -21,15 +22,31 @@ const ScheduleSummary = () => {
   if (dateAttributes.error) {
     return <List.Item title="Error" subtitle={dateAttributes.error.message} />;
   }
+  if (currentStatus.error) {
+    return <List.Item title="Error" subtitle={currentStatus.error.message} />;
+  }
 
+  const 현재_근무상태 = currentStatus.data!.realtimeStatus;
   const 이번달_해야하는_근무일 = dateAttributes.data!.totalDaysOfMonth - dateAttributes.data!.dayOffCountOfMonth;
-  const 이번달_남은_근무일 = scheduleSummary.data!.resultForFullFlexible.remainingDaysByEndDateOfWorkingPeriod;
+  const 이번달_남은_근무일 =
+    scheduleSummary.data!.resultForFullFlexible.remainingDaysByEndDateOfWorkingPeriod -
+    (현재_근무상태 === "근무 종료" ? 1 : 0);
 
-  const 이번달_연차_minutes = 2400;
+  const 이번달_연차_minutes = scheduleSummary.data!.result.timeOffUseResultsByTimeOffPolicies.reduce(
+    (acc, timeOffUseResult) => acc + timeOffUseResult.totalMinutes,
+    0,
+  );
 
   const 이번달_근무시간_minutes = scheduleSummary.data!.result.totalRecognizedWorkingMinutes;
   const 이번달_해야하는_근무시간_minutes = 8 * 60 * 이번달_해야하는_근무일;
-  const 이반달_남은_최소_근무시간_minutes = Math.max(이번달_해야하는_근무시간_minutes - 이번달_근무시간_minutes, 0);
+  const 이번달_남은_최소_근무시간_minutes = Math.max(이번달_해야하는_근무시간_minutes - 이번달_근무시간_minutes, 0);
+
+  const 지나지않은연차일 = 5;
+
+  const 오차시간 =
+    scheduleSummary.data!.result.totalRecognizedWorkingMinutes -
+    scheduleSummary.data!.result.totalTimeOffMinutes -
+    (이번달_해야하는_근무일 - 이번달_남은_근무일 - 지나지않은연차일) * 8 * 60;
 
   return (
     <>
@@ -73,8 +90,15 @@ const ScheduleSummary = () => {
         accessories={[
           {
             text: {
-              value: `${minutesToHourString(이반달_남은_최소_근무시간_minutes)}`,
+              value: `${minutesToHourString(이번달_남은_최소_근무시간_minutes)}`,
               color: Color.Blue,
+            },
+            icon: Icon.Clock,
+          },
+          {
+            text: {
+              value: `${minutesToHourString(오차시간)}`,
+              color: 오차시간 > 0 ? Color.Green : Color.Red,
             },
             icon: Icon.Clock,
           },
