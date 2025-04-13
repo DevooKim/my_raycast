@@ -2,6 +2,7 @@ import { Icon, MenuBarExtra } from "@raycast/api";
 import useGetCurrentStatus from "./hooks/useGetCurrentStatus";
 import { minutesToHourString } from "./utils/string";
 import { RealtimeStatus } from "./types/currentStatus";
+import { seoulDayjs } from "./utils/dayjs.timezone";
 
 export default function Command() {
   const currentStatus = useGetCurrentStatus();
@@ -12,6 +13,9 @@ export default function Command() {
   }
 
   const 현재_근무상태 = currentStatus.data!.realtimeStatus;
+
+  const nextUpdateTime = seoulDayjs(currentStatus.data!.requestedAt).add(5, "minute").format("HH:mm");
+
   const { currentWorkingMinutes, recordingRestMinutes } = currentStatus.data!;
 
   const statusIcon = (status: RealtimeStatus) => {
@@ -40,6 +44,7 @@ export default function Command() {
           ? 현재_근무상태
           : minutesToHourString(현재_근무상태 === "휴게" ? recordingRestMinutes : currentWorkingMinutes)
       }
+      tooltip={`5분 단위로 업데이트됩니다. 다음 업데이트 시간: ${nextUpdateTime}`}
     >
       <MenuBarExtra.Item title="Seen" />
       <MenuBarExtra.Item
