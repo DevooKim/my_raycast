@@ -44,17 +44,14 @@ const ScheduleSummary = () => {
   const dateAttributes = useGetDateAttribute();
   const currentStatus = useGetCurrentStatus();
 
-  if (scheduleSummary.isLoading || dateAttributes.isLoading || currentStatus.isLoading) {
+  const isLoading = scheduleSummary.isLoading || dateAttributes.isLoading || currentStatus.isLoading;
+  const error = scheduleSummary.error || dateAttributes.error || currentStatus.error;
+
+  if (isLoading) {
     return <List.Item title="Loading..." />;
   }
-  if (scheduleSummary.error) {
-    return <List.Item title="Error" subtitle={scheduleSummary.error.message} />;
-  }
-  if (dateAttributes.error) {
-    return <List.Item title="Error" subtitle={dateAttributes.error.message} />;
-  }
-  if (currentStatus.error) {
-    return <List.Item title="Error" subtitle={currentStatus.error.message} />;
+  if (error) {
+    return <List.Item title="Error" subtitle={error.message} />;
   }
 
   const 지나지않은연차일 = 5;
@@ -142,10 +139,13 @@ const ScheduleSummary = () => {
 const CurrentStatus = () => {
   const currentStatus = useGetCurrentStatus();
 
-  if (currentStatus.isLoading) {
+  const isLoading = currentStatus.isLoading;
+  const error = currentStatus.error;
+
+  if (isLoading) {
     return <List.Item title="Loading..." />;
   }
-  if (currentStatus.error) {
+  if (error) {
     return <List.Item title="Error" subtitle={currentStatus.error.message} />;
   }
 
@@ -210,11 +210,14 @@ const CurrentStatus = () => {
 const TimeOff = () => {
   const timeOff = useGetTimeOff();
 
-  if (timeOff.isLoading) {
+  const isLoading = timeOff.isLoading;
+  const error = timeOff.error;
+
+  if (isLoading) {
     return <List.Item title="Loading..." />;
   }
-  if (timeOff.error) {
-    return <List.Item title="Error" subtitle={timeOff.error.message} />;
+  if (error) {
+    return <List.Item title="Error" subtitle={error.message} />;
   }
 
   const timeOffList = timeOff.data!.timeOffList;
