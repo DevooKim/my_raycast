@@ -32,7 +32,10 @@ const ScheduleSummary = () => {
     return <List.Item title="Error" subtitle={error.message} />;
   }
 
-  const 지나지않은연차일 = getNotPassedTimeOffDays(timeOff.data!.timeOffList).length;
+  const 지나지않은연차일 = getNotPassedTimeOffDays(timeOff.data!.timeOffList).reduce((acc, timeOffEvent) => {
+    const offset = timeOffEvent.timeOffRegisterUnit === "DAY" ? 1 : 0.5;
+    return acc + offset;
+  }, 0);
 
   const 이번달_근무일 = calculateWorkingPeriod({
     dateAttributesData: dateAttributes.data!,
@@ -199,6 +202,16 @@ const TimeOff = () => {
     return <List.Item title="Error" subtitle={error.message} />;
   }
 
+  const getColor = (blockDate: string) => {
+    const today = seoulDayjs();
+
+    if (today.isAfter(seoulDayjs(blockDate), "day")) {
+      return Color.SecondaryText;
+    }
+
+    return Color.Yellow;
+  };
+
   const timeOffList = timeOff.data!.timeOffList;
   const timeOffPolicyMap = timeOff.data!.timeOffPolicyMap;
 
@@ -211,7 +224,10 @@ const TimeOff = () => {
           subtitle={timeOffPolicyMap[timeOffEvent.timeOffPolicyId]?.name}
           accessories={[
             {
-              tag: { value: TimeOffRegisterUnitValue[timeOffEvent.timeOffRegisterUnit], color: Color.Blue },
+              tag: {
+                value: TimeOffRegisterUnitValue[timeOffEvent.timeOffRegisterUnit],
+                color: getColor(timeOffEvent.blockDate),
+              },
               icon: Icon.Airplane,
             },
             { text: minutesToHourString(timeOffEvent.usedMinutes) },
