@@ -10,14 +10,19 @@ import { TimeOffRegisterUnitValue } from "./types/timeOff";
 import { DateAttributes } from "./types/dateAttributes";
 import { ScheduleSummaryData } from "./types/scheduleSummary";
 
-interface Get근무일Params {
+interface calculateWorkingPeriodParams {
   dateAttributesData: DateAttributes;
   scheduleSummaryData: ScheduleSummaryData;
   지나지않은연차일: number;
   현재_근무상태: RealtimeStatus;
 }
 
-const get근무일 = ({ dateAttributesData, scheduleSummaryData, 현재_근무상태, 지나지않은연차일 }: Get근무일Params) => {
+const calculateWorkingPeriod = ({
+  dateAttributesData,
+  scheduleSummaryData,
+  현재_근무상태,
+  지나지않은연차일,
+}: calculateWorkingPeriodParams) => {
   const 전체 = dateAttributesData.totalDaysOfMonth - dateAttributesData.dayOffCountOfMonth;
   const 전체_연차제외 = 전체 - 지나지않은연차일;
   const 남은 =
@@ -53,7 +58,7 @@ const ScheduleSummary = () => {
   }
 
   const 지나지않은연차일 = 5;
-  const 이번달_근무일 = get근무일({
+  const 이번달_근무일 = calculateWorkingPeriod({
     dateAttributesData: dateAttributes.data!,
     scheduleSummaryData: scheduleSummary.data!,
     현재_근무상태: currentStatus.data!.realtimeStatus,
