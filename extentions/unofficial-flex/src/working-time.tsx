@@ -1,14 +1,17 @@
 import { Color, Icon, List } from "@raycast/api";
-import useGetScheduleSummary from "./hooks/useGetScheduleSummary";
+
 import useGetCurrentStatus from "./hooks/useGetCurrentStatus";
-import { minutesToDayString, minutesToHourString } from "./utils/string";
-import useGetTimeOff from "./hooks/useGetTimeOff";
-import { RealtimeStatus } from "./types/currentStatus";
 import useGetDateAttribute from "./hooks/useGetDateAttribute";
-import { seoulDayjs } from "./utils/dayjs.timezone";
+import useGetScheduleSummary from "./hooks/useGetScheduleSummary";
+import useGetTimeOff, { type TimeOffListItem } from "./hooks/useGetTimeOff";
+
+import { type RealtimeStatus } from "./types/currentStatus";
+import { type DateAttributes } from "./types/dateAttributes";
+import { type ScheduleSummaryData } from "./types/scheduleSummary";
 import { TimeOffRegisterUnitValue } from "./types/timeOff";
-import { DateAttributes } from "./types/dateAttributes";
-import { ScheduleSummaryData } from "./types/scheduleSummary";
+
+import { seoulDayjs } from "./utils/dayjs.timezone";
+import { minutesToDayString, minutesToHourString } from "./utils/string";
 
 interface calculateWorkingPeriodParams {
   dateAttributesData: DateAttributes;
@@ -39,13 +42,24 @@ const calculateWorkingPeriod = ({
   };
 };
 
+const getNotPassedTimeOffDays = (timeOffList: TimeOffListItem[]): TimeOffListItem[] => {
+  const today = seoulDayjs();
+
+  return timeOffList.filter((timeOff) => {
+    const blockDate = seoulDayjs(timeOff.blockDate);
+    return blockDate.isAfter(today, "day") || (blockDate.isSame(today, "day") && timeOff.usedMinutes > 0);
+  });
+};
+
 const ScheduleSummary = () => {
   const scheduleSummary = useGetScheduleSummary();
   const dateAttributes = useGetDateAttribute();
   const currentStatus = useGetCurrentStatus();
+  const timeOff = useGetTimeOff();
 
-  const isLoading = scheduleSummary.isLoading || dateAttributes.isLoading || currentStatus.isLoading;
-  const error = scheduleSummary.error || dateAttributes.error || currentStatus.error;
+  const isLoading =
+    scheduleSummary.isLoading || dateAttributes.isLoading || currentStatus.isLoading || timeOff.isLoading;
+  const error = scheduleSummary.error || dateAttributes.error || currentStatus.error || timeOff.error;
 
   if (isLoading) {
     return <List.Item title="Loading..." />;
@@ -54,7 +68,8 @@ const ScheduleSummary = () => {
     return <List.Item title="Error" subtitle={error.message} />;
   }
 
-  const 지나지않은연차일 = 5;
+  const 지나지않은연차일 = getNotPassedTimeOffDays(timeOff.data!.timeOffList).length;
+
   const 이번달_근무일 = calculateWorkingPeriod({
     dateAttributesData: dateAttributes.data!,
     scheduleSummaryData: scheduleSummary.data!,
@@ -228,7 +243,7 @@ const TimeOff = () => {
       {timeOffList.map((timeOffEvent) => (
         <List.Item
           key={`${timeOffEvent.blockDate}-${timeOffEvent.userTimeOffRegisterEventId}`}
-          title={timeOffEvent.blockDate}
+          title={`${timeOffEvent.blockDate} ${seoulDayjs(timeOffEvent.blockDate).format("dd")}`}
           subtitle={timeOffPolicyMap[timeOffEvent.timeOffPolicyId]?.name}
           accessories={[
             {

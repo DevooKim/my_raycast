@@ -2,19 +2,22 @@ import { getPreferenceValues } from "@raycast/api";
 import { useRef } from "react";
 import { useCachedPromise } from "@raycast/utils";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
-import { CustomTimeOffForm, TimeOffUse, UserTimeOffRegisterEventBlock, type TimeOffData } from "../types/timeOff";
-import { seoulDayjs } from "../utils/dayjs.timezone";
+import { CustomTimeOffForm, TimeOffUse, UserTimeOffRegisterEventBlock } from "../types/timeOff";
 import { getTimeOff } from "../fetches/getTimeOff";
 
 const TIME_OFF_CACHE_KEY = CACHE_KEY.TIME_OFF;
 
-const getTimeOffList = (timeOffUses: TimeOffUse[]) => {
+export type TimeOffListItem = UserTimeOffRegisterEventBlock & {
+  timeOffPolicyId: TimeOffUse["timeOffPolicyId"];
+  // blockDate: string;
+};
+
+const getTimeOffList = (timeOffUses: TimeOffUse[]): TimeOffListItem[] => {
   return timeOffUses
     .map((item) =>
       item.userTimeOffRegisterEventBlocks.map((block) => ({
         ...block,
         timeOffPolicyId: item.timeOffPolicyId,
-        blockDate: `${block.blockDate} ${seoulDayjs(block.blockDate).format("dd")}`,
       })),
     )
     .flat();
