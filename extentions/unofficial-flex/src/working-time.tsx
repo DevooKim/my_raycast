@@ -3,53 +3,14 @@ import { Color, Icon, List } from "@raycast/api";
 import useGetCurrentStatus from "./hooks/useGetCurrentStatus";
 import useGetDateAttribute from "./hooks/useGetDateAttribute";
 import useGetScheduleSummary from "./hooks/useGetScheduleSummary";
-import useGetTimeOff, { type TimeOffListItem } from "./hooks/useGetTimeOff";
+import useGetTimeOff from "./hooks/useGetTimeOff";
 
 import { type RealtimeStatus } from "./types/currentStatus";
-import { type DateAttributes } from "./types/dateAttributes";
-import { type ScheduleSummaryData } from "./types/scheduleSummary";
 import { TimeOffRegisterUnitValue } from "./types/timeOff";
 
 import { seoulDayjs } from "./utils/dayjs.timezone";
 import { minutesToDayString, minutesToHourString } from "./utils/string";
-
-interface calculateWorkingPeriodParams {
-  dateAttributesData: DateAttributes;
-  scheduleSummaryData: ScheduleSummaryData;
-  지나지않은연차일: number;
-  현재_근무상태: RealtimeStatus;
-}
-
-const calculateWorkingPeriod = ({
-  dateAttributesData,
-  scheduleSummaryData,
-  현재_근무상태,
-  지나지않은연차일,
-}: calculateWorkingPeriodParams) => {
-  const 전체 = dateAttributesData.totalDaysOfMonth - dateAttributesData.dayOffCountOfMonth;
-  const 전체_연차제외 = 전체 - 지나지않은연차일;
-  const 남은 =
-    scheduleSummaryData.resultForFullFlexible.remainingDaysByEndDateOfWorkingPeriod +
-    지나지않은연차일 -
-    (현재_근무상태 === "근무 종료" ? 1 : 0);
-  const 남은_연차제외 = 남은 - 지나지않은연차일;
-
-  return {
-    전체,
-    전체_연차제외,
-    남은,
-    남은_연차제외,
-  };
-};
-
-const getNotPassedTimeOffDays = (timeOffList: TimeOffListItem[]): TimeOffListItem[] => {
-  const today = seoulDayjs();
-
-  return timeOffList.filter((timeOff) => {
-    const blockDate = seoulDayjs(timeOff.blockDate);
-    return blockDate.isAfter(today, "day") || (blockDate.isSame(today, "day") && timeOff.usedMinutes > 0);
-  });
-};
+import { getNotPassedTimeOffDays, calculateWorkingPeriod } from "./utils/calculateData";
 
 const ScheduleSummary = () => {
   const scheduleSummary = useGetScheduleSummary();
