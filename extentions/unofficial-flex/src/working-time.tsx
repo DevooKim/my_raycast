@@ -7,6 +7,32 @@ import { RealtimeStatus } from "./types/currentStatus";
 import useGetDateAttribute from "./hooks/useGetDateAttribute";
 import { seoulDayjs } from "./utils/dayjs.timezone";
 import { TimeOffRegisterUnitValue } from "./types/timeOff";
+import { DateAttributes } from "./types/dateAttributes";
+import { ScheduleSummaryData } from "./types/scheduleSummary";
+
+interface Get근무일Params {
+  dateAttributesData: DateAttributes;
+  scheduleSummaryData: ScheduleSummaryData;
+  지나지않은연차일: number;
+  현재_근무상태: RealtimeStatus;
+}
+
+const get근무일 = ({ dateAttributesData, scheduleSummaryData, 현재_근무상태, 지나지않은연차일 }: Get근무일Params) => {
+  const 전체 = dateAttributesData.totalDaysOfMonth - dateAttributesData.dayOffCountOfMonth;
+  const 전체_연차제외 = 전체 - 지나지않은연차일;
+  const 남은 =
+    scheduleSummaryData.resultForFullFlexible.remainingDaysByEndDateOfWorkingPeriod +
+    지나지않은연차일 -
+    (현재_근무상태 === "근무 종료" ? 1 : 0);
+  const 남은_연차제외 = 남은 - 지나지않은연차일;
+
+  return {
+    전체,
+    전체_연차제외,
+    남은,
+    남은_연차제외,
+  };
+};
 
 const ScheduleSummary = () => {
   const scheduleSummary = useGetScheduleSummary();
@@ -26,11 +52,13 @@ const ScheduleSummary = () => {
     return <List.Item title="Error" subtitle={currentStatus.error.message} />;
   }
 
-  const 현재_근무상태 = currentStatus.data!.realtimeStatus;
-  const 이번달_해야하는_근무일 = dateAttributes.data!.totalDaysOfMonth - dateAttributes.data!.dayOffCountOfMonth;
-  const 이번달_남은_근무일 =
-    scheduleSummary.data!.resultForFullFlexible.remainingDaysByEndDateOfWorkingPeriod -
-    (현재_근무상태 === "근무 종료" ? 1 : 0);
+  const 지나지않은연차일 = 5;
+  const 이번달_근무일 = get근무일({
+    dateAttributesData: dateAttributes.data!,
+    scheduleSummaryData: scheduleSummary.data!,
+    현재_근무상태: currentStatus.data!.realtimeStatus,
+    지나지않은연차일,
+  });
 
   const 이번달_연차_minutes = scheduleSummary.data!.result.timeOffUseResultsByTimeOffPolicies.reduce(
     (acc, timeOffUseResult) => acc + timeOffUseResult.totalMinutes,
@@ -38,15 +66,10 @@ const ScheduleSummary = () => {
   );
 
   const 이번달_근무시간_minutes = scheduleSummary.data!.result.totalRecognizedWorkingMinutes;
-  const 이번달_해야하는_근무시간_minutes = 8 * 60 * 이번달_해야하는_근무일;
+  const 이번달_해야하는_근무시간_minutes = 8 * 60 * 이번달_근무일.전체;
   const 이번달_남은_최소_근무시간_minutes = Math.max(이번달_해야하는_근무시간_minutes - 이번달_근무시간_minutes, 0);
 
-  const 지나지않은연차일 = 5;
-
-  const 오차시간 =
-    scheduleSummary.data!.result.totalRecognizedWorkingMinutes -
-    scheduleSummary.data!.result.totalTimeOffMinutes -
-    (이번달_해야하는_근무일 - 이번달_남은_근무일 - 지나지않은연차일) * 8 * 60;
+  const 오차시간 = 이번달_근무일.남은_연차제외 * 8 * 60 - 이번달_남은_최소_근무시간_minutes;
 
   return (
     <>
@@ -55,15 +78,18 @@ const ScheduleSummary = () => {
         accessories={[
           {
             text: {
-              value: `${이번달_남은_근무일} / ${이번달_해야하는_근무일}`,
+              value: `${이번달_근무일.남은} / ${이번달_근무일.전체}`,
               color: Color.Blue,
             },
             icon: Icon.Calendar,
           },
           {
-            tag: {
-              value: `연차 ${minutesToDayString(이번달_연차_minutes)} 포함`,
+            text: {
+              value: `${이번달_근무일.남은_연차제외} / ${이번달_근무일.전체_연차제외}`,
+              color: Color.Yellow,
             },
+            icon: Icon.Calendar,
+            tooltip: `연차 ${minutesToDayString(이번달_연차_minutes)}`,
           },
         ]}
       />
