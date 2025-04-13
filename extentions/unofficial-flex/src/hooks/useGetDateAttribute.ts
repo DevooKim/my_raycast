@@ -6,6 +6,7 @@ import { DateAttributes, type DateAttributesResponse } from "../types/dateAttrib
 
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextHour } from "../utils/cache";
 import { getDateAttributes } from "../fetches/getDateAttribute";
+import { getCookie } from "../utils/cookie";
 
 const ATTRIBUTES_CACHE_KEY = CACHE_KEY.ATTRIBUTES;
 
@@ -23,7 +24,9 @@ export default function useGetDateAttribute() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise(
-    async (cookie: string): Promise<DateAttributes> => {
+    async (): Promise<DateAttributes> => {
+      const cookie = await getCookie();
+
       const cachedData = getCache<DateAttributes>(ATTRIBUTES_CACHE_KEY);
       if (cachedData) {
         return cachedData;
@@ -38,7 +41,7 @@ export default function useGetDateAttribute() {
         requestedAt: response.requestedAt,
       };
     },
-    [preferences.cookie],
+    [],
     {
       abortable,
       onData: (data) => {

@@ -4,6 +4,7 @@ import { useCachedPromise } from "@raycast/utils";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
 import { CustomTimeOffForm, TimeOffUse, UserTimeOffRegisterEventBlock } from "../types/timeOff";
 import { getTimeOff } from "../fetches/getTimeOff";
+import { getCookie } from "../utils/cookie";
 
 const TIME_OFF_CACHE_KEY = CACHE_KEY.TIME_OFF;
 
@@ -40,13 +41,13 @@ export default function useGetTimeOff() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise(
-    async (
-      cookie: string,
-    ): Promise<{
+    async (): Promise<{
       timeOffList: (UserTimeOffRegisterEventBlock & { timeOffPolicyId: TimeOffUse["timeOffPolicyId"] })[];
       timeOffPolicyMap: Record<string, CustomTimeOffForm["displayInfo"]>;
       requestedAt: number;
     }> => {
+      const cookie = await getCookie();
+
       const cachedData = getCache<{
         timeOffList: (UserTimeOffRegisterEventBlock & { timeOffPolicyId: TimeOffUse["timeOffPolicyId"] })[];
         timeOffPolicyMap: Record<string, CustomTimeOffForm["displayInfo"]>;
@@ -67,7 +68,7 @@ export default function useGetTimeOff() {
         requestedAt: response.requestedAt,
       };
     },
-    [preferences.cookie],
+    [],
     {
       abortable,
       onData: (data) => {

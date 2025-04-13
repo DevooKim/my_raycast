@@ -16,13 +16,6 @@
   ],
   "preferences": [
     {
-      "name": "cookie",
-      "title": "Cookie",
-      "description": "Enter your Cookie",
-      "type": "textfield",
-      "required": true
-    },
-    {
       "name": "userId",
       "title": "User ID",
       "description": "Enter your User ID",

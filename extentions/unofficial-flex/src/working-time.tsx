@@ -1,4 +1,4 @@
-import { Color, Icon, List } from "@raycast/api";
+import { Action, ActionPanel, Color, Form, Icon, List } from "@raycast/api";
 
 import useGetCurrentStatus from "./hooks/useGetCurrentStatus";
 import useGetDateAttribute from "./hooks/useGetDateAttribute";
@@ -11,6 +11,9 @@ import { TimeOffRegisterUnitValue } from "./types/timeOff";
 import { seoulDayjs } from "./utils/dayjs.timezone";
 import { minutesToDayString, minutesToHourString } from "./utils/string";
 import { getNotPassedTimeOffDays, calculateWorkingPeriod } from "./utils/calculateData";
+import useGetIsValidCookie from "./hooks/useGetIsValidCookie";
+import { AuthError } from "./errors/AuthError";
+import { COOKIE_KEY, setCookie } from "./utils/cookie";
 
 const ScheduleSummary = () => {
   const scheduleSummary = useGetScheduleSummary();
@@ -223,8 +226,33 @@ export default function Command() {
   const now = seoulDayjs();
   const currentMonth = now.format("M");
 
+  const { isLoading, error, revalidate } = useGetIsValidCookie();
+
+  if (error instanceof AuthError) {
+    return (
+      <Form
+        enableDrafts
+        actions={
+          <ActionPanel>
+            <Action.SubmitForm
+              title="Save Cookie"
+              onSubmit={async (values) => {
+                console.log("values", values);
+                await setCookie(values[COOKIE_KEY]);
+
+                revalidate();
+              }}
+            />
+          </ActionPanel>
+        }
+      >
+        <Form.PasswordField title="Cookie" id={COOKIE_KEY} defaultValue="" autoFocus info="AID" />
+      </Form>
+    );
+  }
+
   return (
-    <List>
+    <List isLoading={isLoading}>
       <List.Section title={`${currentMonth}월 정보`}>
         <ScheduleSummary />
       </List.Section>

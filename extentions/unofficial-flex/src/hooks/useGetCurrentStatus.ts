@@ -8,6 +8,7 @@ import { WorkForm } from "../types/workForm";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
 import { seoulDayjs } from "../utils/dayjs.timezone";
 import { getCurrentStatus } from "../fetches/getCurrentStatus";
+import { getCookie } from "../utils/cookie";
 
 const STATUS_CACHE_KEY = CACHE_KEY.STATUS;
 
@@ -93,7 +94,7 @@ export interface CurrentStatus {
   requestedAt: CurrentStatusResponse["requestedAt"];
 }
 
-type CachedPromise = (cookie: string) => Promise<CurrentStatus>;
+type CachedPromise = () => Promise<CurrentStatus>;
 
 export default function useGetCurrentStatus() {
   const preferences = getPreferenceValues<Preferences>();
@@ -102,7 +103,9 @@ export default function useGetCurrentStatus() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise<CachedPromise>(
-    async (cookie: string) => {
+    async () => {
+      const cookie = await getCookie();
+
       const cachedData = getCache<CurrentStatus>(STATUS_CACHE_KEY);
       if (cachedData) {
         return cachedData;
@@ -120,7 +123,7 @@ export default function useGetCurrentStatus() {
         requestedAt: response.requestedAt,
       };
     },
-    [preferences.cookie],
+    [],
     {
       abortable,
       onData: (data) => {

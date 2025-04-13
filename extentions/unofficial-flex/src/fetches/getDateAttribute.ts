@@ -22,7 +22,6 @@ export const getDateAttributes = async ({
   });
 
   if (response.status === 401) {
-    console.log("401 error");
     throw new AuthError();
   }
 

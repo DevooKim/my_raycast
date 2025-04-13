@@ -1,4 +1,4 @@
-import { Cache, environment } from "@raycast/api";
+import { Cache } from "@raycast/api";
 import { tryCatch } from "./try-catch";
 import { utcDayjs } from "./dayjs.timezone";
 
@@ -10,6 +10,7 @@ export const CACHE_KEY = {
   TIME_OFF: "time-off", // TIME_OFF 캐시 키 추가
   ATTRIBUTES: "attributesCache",
   STATUS: "statusCache",
+  IS_VALID_COOKIE: "isValidCookie",
 } as const;
 
 export const clearCache = () => {
@@ -36,10 +37,6 @@ export const isStaleCache = (key: string) => {
 export const getCache = <T = string>(key: string): T | null => {
   const stale = isStaleCache(key);
   const cachedData = cache.get(key);
-
-  if (environment.isDevelopment) {
-    return null;
-  }
 
   if (stale) {
     removeCache(key);

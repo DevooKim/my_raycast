@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { useCachedPromise } from "@raycast/utils";
 import { CACHE_KEY, clearCache, getCache, isStaleCache, setCacheForNextMinute } from "../utils/cache";
 import { getScheduleSummary } from "../fetches/getScheduleSummary";
+import { getCookie } from "../utils/cookie";
 
 const SUMMARY_CACHE_KEY = CACHE_KEY.SUMMARY;
 
@@ -15,7 +16,9 @@ export default function useGetScheduleSummary() {
   const abortable = useRef<AbortController>(null);
 
   const result = useCachedPromise(
-    async (cookie: string): Promise<ScheduleSummaryData> => {
+    async (): Promise<ScheduleSummaryData> => {
+      const cookie = await getCookie();
+
       const cachedData = getCache<ScheduleSummaryData>(SUMMARY_CACHE_KEY);
       if (cachedData) {
         return cachedData;
@@ -23,7 +26,7 @@ export default function useGetScheduleSummary() {
 
       return await getScheduleSummary({ userId, cookie, timestamp });
     },
-    [preferences.cookie],
+    [],
     {
       abortable,
       onData: (data) => {
