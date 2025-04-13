@@ -12,6 +12,14 @@
       "title": "Working Time",
       "description": "",
       "mode": "view"
+    },
+    {
+      "name": "menu-bar",
+      "title": "Menu Bar",
+      "subtitle": "Menu",
+      "description": "",
+      "interval": "5m",
+      "mode": "menu-bar"
     }
   ],
   "preferences": [
